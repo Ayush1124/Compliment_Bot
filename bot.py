@@ -1,13 +1,31 @@
 import os
 import discord
-import openai
 from dotenv import load_dotenv
-import sys
+import aiohttp
+import nest_asyncio
 
 load_dotenv()
+nest_asyncio.apply()
+
 TOKEN = os.getenv("DISCORD_TOKEN")
-openai.api_key = os.getenv("OPENAI_API_KEY")
+OPENAI_KEY = os.getenv("OPENAI_API_KEY")
 client = discord.Client()
+
+async def get_response(prompt):
+    compliment = {
+        'prompt': prompt,
+        'temperature': 0.9,
+        'max_tokens': 150,
+        'top_p': 1,
+        'frequency_penalty': 0,
+        'presence_penalty': 0
+    }
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False), headers={'authorization': f"Bearer {OPENAI_KEY}"}) as session:
+        url = 'https://api.openai.com/v1/engines/text-davinci-002/completions'
+        async with session.post(url, json=compliment) as resp:
+            text = await resp.json()
+            return text['choices'][0]['text']
+    
 
 @client.event
 async def on_message(message):
@@ -30,16 +48,10 @@ async def on_message(message):
                     break
                 name += text[i]
             p = f"Create a compliment using the following name and keywords\nName: {name}\nKeywords: {reason}"
-            response = openai.Completion.create(
-                model="text-davinci-002",
-                prompt= p,
-                temperature=0.7,
-                max_tokens=256,
-                top_p=1,
-                frequency_penalty=0,
-                presence_penalty=0
-            )
-            await message.channel.send(response["choices"][0]["text"])
-        except:
-            await message.channel.send(f"```Error Occurred.\nPlease refer to '%help compliment' to properly format your compliment```")
+            
+            compliment = await get_response(p)
+            
+            await message.channel.send(compliment)
+        except Exception as e:
+            await message.channel.send(f"```Error Occurred.\nPlease refer to '%help compliment' to properly format your compliment``` {e}")
 client.run(TOKEN)
