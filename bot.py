@@ -17,6 +17,8 @@ async def on_message(message):
         await message.channel.send(f"```The correct format for a compliment is: \n'%compliment <name> for <reason>'```")
     if message.content.startswith("%compliment"):
         try:
+            if "for" not in message.content:
+                raise Exception
             text = str(message.content).split()[1:] 
             for i in range(len(text)):
                 if text[i] == "for":
@@ -39,5 +41,5 @@ async def on_message(message):
             )
             await message.channel.send(response["choices"][0]["text"])
         except:
-            await message.channel.send(f"```Error Occurred.\nPlease refer to '%help compliments' to properly format your compliment\n{sys.exc_info()}```")
+            await message.channel.send(f"```Error Occurred.\nPlease refer to '%help compliment' to properly format your compliment```")
 client.run(TOKEN)
