@@ -1,1 +1,3 @@
-"# Compliment_Bot" 
+This is a Discord bot that uses NLP to give custom compliments.
+Coded using Python.
+NLP model used: GPT-3 text-davinci-002.
